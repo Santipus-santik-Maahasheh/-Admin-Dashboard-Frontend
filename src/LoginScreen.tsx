@@ -1,22 +1,25 @@
 import { useState } from 'react'
+import type { FormEvent } from 'react'
 import { motion } from 'motion/react'
 import { Mail, Lock, ChevronRight, AlertCircle, Loader2 } from 'lucide-react'
 import { login } from './api'
+import type { User } from './api'
 
-export default function LoginScreen({ onLogin }) {
+export default function LoginScreen({ onLogin }: { onLogin: (user: User) => void }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  async function submit(e) {
+  async function submit(e: FormEvent) {
     e.preventDefault()
     setError('')
     setBusy(true)
     try {
       onLogin(await login(email, password))
     } catch (err) {
-      setError(err.message === 'Failed to fetch' ? 'Cannot reach the server' : err.message)
+      const msg = err instanceof Error ? err.message : String(err)
+      setError(msg === 'Failed to fetch' ? 'Cannot reach the server' : msg)
       setBusy(false)
     }
   }

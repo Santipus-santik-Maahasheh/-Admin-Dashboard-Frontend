@@ -1,10 +1,14 @@
-// node --test src/api.test.mjs
+// node --test src/api.test.ts
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { login } from './api.js'
+import { login } from './api.ts'
 
-const reply = (status, body) => {
-  globalThis.fetch = async () => ({ status, ok: status < 400, json: async () => body })
+const reply = (status: number, body: unknown) => {
+  globalThis.fetch = (async () => ({
+    status,
+    ok: status < 400,
+    json: async () => body,
+  })) as unknown as typeof fetch
 }
 
 test('returns the user payload on success', async () => {
@@ -22,13 +26,13 @@ test('surfaces the 400 validation message', async () => {
   await assert.rejects(() => login('', ''), /email and password are required/)
 })
 
-test("sends credentials so the httpOnly cookie is actually stored", async () => {
-  let sent
-  globalThis.fetch = async (_url, opts) => {
+test('sends credentials so the httpOnly cookie is actually stored', async () => {
+  let sent: RequestInit | undefined
+  globalThis.fetch = (async (_url: RequestInfo | URL, opts?: RequestInit) => {
     sent = opts
     return { status: 200, ok: true, json: async () => ({ payload: {} }) }
-  }
+  }) as unknown as typeof fetch
   await login('a@b.io', 'pw')
-  assert.equal(sent.credentials, 'include')
-  assert.deepEqual(JSON.parse(sent.body), { email: 'a@b.io', password: 'pw' })
+  assert.equal(sent?.credentials, 'include')
+  assert.deepEqual(JSON.parse(sent?.body as string), { email: 'a@b.io', password: 'pw' })
 })

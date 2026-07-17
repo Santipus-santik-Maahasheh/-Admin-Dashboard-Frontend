@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import LoginScreen from './LoginScreen'
+import type { User } from './api'
 
 function App() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<User | null>(null)
 
   if (!user) return <LoginScreen onLogin={setUser} />
 
